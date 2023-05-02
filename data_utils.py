@@ -47,3 +47,14 @@ class CustomDataset(Dataset):
             self.y[idx] = np.array(label).astype(np.float32)
 
         return self.x[idx], self.y[idx]
+
+
+def equalize_ds(folder_path):
+    files_paths = glob(f'{folder_path}/**.psv')
+    new_ds_path = 'new_data/train'
+    for file_path in files_paths:
+        patient_dataframe = pd.read_csv(file_path, sep='|')
+        if len(patient_dataframe[patient_dataframe.SepsisLabel == 1]) > 0:
+            for index in range(1, 14):
+                new_file_name = file_path.replace('.psv', '') + f'_{index}.psv'
+                patient_dataframe.to_csv(new_file_name, sep='|', index=False)

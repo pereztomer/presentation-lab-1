@@ -7,6 +7,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from sklearn.metrics import f1_score as sklearn_f1_score
 from sklearn.metrics import accuracy_score as sklearn_accuracy_score
+from transformer_model import TransformerClassifier
 
 
 def train():
@@ -27,13 +28,29 @@ def train():
     test_data_loader = DataLoader(dataset=test_ds,
                                   batch_size=train_batch_size,
                                   shuffle=train_shuffle)
+    num_epochs = 10
 
+    # # lstm params:
+    # input_size = 40
+    # hidden_size = 20
+    # num_layers = 2
+    # output_size = 1
+    # model = LSTMClassifier(input_size, hidden_size, num_layers, output_size).to(device)
+
+    # transformer params:
     input_size = 40
     hidden_size = 20
     num_layers = 2
     output_size = 1
-    num_epochs = 10
-    model = LSTMClassifier(input_size, hidden_size, num_layers, output_size).to(device)
+    num_heads = 2
+    dropout = 0.1
+
+    model = TransformerClassifier(input_size,
+                                  hidden_size,
+                                  num_layers,
+                                  output_size,
+                                  num_heads,
+                                  dropout).to(device)
 
     criterion = nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
