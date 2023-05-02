@@ -74,11 +74,42 @@ def train():
 
         train_f1 = sklearn_f1_score(train_actual, train_predicted)
         train_accuracy = sklearn_accuracy_score(train_actual, train_predicted)
+
+        # Evaluate the model on the test set
+        model.eval()
+        test_total_loss = 0.0
+        test_total_predicted = []
+        test_total_actual = []
+
+        with torch.no_grad():
+            for test_batch_x, test_batch_labels in tqdm(train_data_loader):
+                test_batch_x = test_batch_x.to(device)
+                test_batch_labels = test_batch_labels.to(device)
+
+                test_outputs = model(test_batch_x)
+                test_loss = criterion(torch.squeeze(test_outputs), test_batch_labels)
+                # Calculate training accuracy and F1 score
+                test_predicted = torch.round(test_outputs)
+                test_total_predicted += torch.squeeze(test_predicted).tolist()
+                test_total_actual += test_batch_labels.tolist()
+
+                # Add batch loss to total loss
+                test_total_loss += test_loss.item() * test_batch_labels.size(0)
+
+        # Calculate average training loss, accuracy and F1 score for the epoch
+        test_total_loss /= len(test_ds)
+
+        test_f1 = sklearn_f1_score(test_total_actual, test_total_predicted)
+        test_accuracy = sklearn_accuracy_score(test_total_actual, test_total_predicted)
+
         print(
             f'Epoch [{epoch + 1}/{num_epochs}], '
             f'train loss: {train_loss:.4f}, '
             f'train accuracy: {train_accuracy:.4f}, '
-            f'train_f1: {train_f1:.4f}')
+            f'train f1: {train_f1:.4f}\n'
+            f'test loss:{test_loss:.4f} '
+            f'test accuracy: {test_accuracy:.4f} '
+            f'test f1: {test_f1:.4f} ')
 
 
 if __name__ == '__main__':
