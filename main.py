@@ -1,23 +1,15 @@
 import pandas as pd
-
+from tqdm import tqdm
 from data_utils import CustomDataset
 
 
 def main():
+    max_seq_length = 336
     train_path = 'data/train'
-    train_ds = CustomDataset(folder_path=train_path)
-    max_shape = 0
-    for idx, val in enumerate(train_ds):
-        if max_shape < val[0].shape[0]:
-            max_shape = val[0].shape[0]
+    train_ds = CustomDataset(folder_path=train_path, max_seq_length=max_seq_length)
+    for val in tqdm(train_ds):
+        print(val[0].shape)
 
-    test_path = 'data/test'
-    test_ds = CustomDataset(folder_path=test_path)
-    for idx, val in enumerate(test_ds):
-        if max_shape < val[0].shape[0]:
-            max_shape = val[0].shape[0]
-
-    print(max_shape)
     exit()
 
     # train_ds = CustomDatasetAug(sentences=train_sentences_idx_padded,
