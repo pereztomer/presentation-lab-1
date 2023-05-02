@@ -1,4 +1,4 @@
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import Dataset
 from glob import glob
 import pandas as pd
 import numpy as np
@@ -7,18 +7,19 @@ import numpy as np
 class CustomDataset(Dataset):
     def __init__(self, folder_path, seq_length):
         files_paths = glob(f'{folder_path}/**.psv')
+        # files_paths = files_paths[:200]
         assert len(files_paths) > 0, 'No available files'
         self.files_path = files_paths
-        self.x = [0] * len(files_paths)
-        self.samples_length = [0] * len(files_paths)
-        self.y = [0] * len(files_paths)
+        self.x = [None] * len(files_paths)
+        self.samples_length = [None] * len(files_paths)
+        self.y = [None] * len(files_paths)
         self.seq_length = seq_length
 
     def __len__(self):
         return len(self.files_path)
 
     def __getitem__(self, idx):
-        if self.x[idx] == 0 or self.y[idx] == 0:
+        if self.x[idx] is None or self.y[idx] is None:
             patient_path = self.files_path[idx]
             patient_dataframe = pd.read_csv(patient_path, sep='|')
             if len(patient_dataframe[patient_dataframe.SepsisLabel == 1]) == 0:
@@ -42,7 +43,7 @@ class CustomDataset(Dataset):
                 zero_padding = np.zeros((self.seq_length - patient_dataframe.shape[0], patient_dataframe.shape[1]))
                 padding_df = pd.DataFrame(zero_padding, columns=patient_dataframe.columns)
                 patient_dataframe = pd.concat([padding_df, patient_dataframe], ignore_index=True)
-            self.x[idx] = patient_dataframe.to_numpy()
-            self.y[idx] = label
+            self.x[idx] = patient_dataframe.to_numpy(dtype=np.float32)
+            self.y[idx] = np.array(label).astype(np.float32)
 
         return self.x[idx], self.y[idx]
