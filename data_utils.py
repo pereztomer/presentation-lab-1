@@ -5,14 +5,14 @@ import numpy as np
 
 
 class CustomDataset(Dataset):
-    def __init__(self, folder_path, max_seq_length):
+    def __init__(self, folder_path, seq_length):
         files_paths = glob(f'{folder_path}/**.psv')
         assert len(files_paths) > 0, 'No available files'
         self.files_path = files_paths
         self.x = [0] * len(files_paths)
         self.samples_length = [0] * len(files_paths)
         self.y = [0] * len(files_paths)
-        self.max_seq_length = max_seq_length
+        self.seq_length = seq_length
 
     def __len__(self):
         return len(self.files_path)
@@ -33,11 +33,16 @@ class CustomDataset(Dataset):
             patient_dataframe = patient_dataframe.fillna(0, inplace=False)
             patient_dataframe = patient_dataframe.drop(columns=['SepsisLabel'], inplace=False)
 
+            self.samples_length[idx] = patient_dataframe.shape[0]
+
             # padding the df:
-            zero_padding = np.zeros((self.max_seq_length - patient_dataframe.shape[0], patient_dataframe.shape[1]))
-            padding_df = pd.DataFrame(zero_padding, columns=patient_dataframe.columns)
-            patient_dataframe = pd.concat([patient_dataframe, padding_df], ignore_index=True)
+            if patient_dataframe.shape[0] >= self.seq_length:
+                patient_dataframe = patient_dataframe.iloc[-self.seq_length:]
+            else:
+                zero_padding = np.zeros((self.seq_length - patient_dataframe.shape[0], patient_dataframe.shape[1]))
+                padding_df = pd.DataFrame(zero_padding, columns=patient_dataframe.columns)
+                patient_dataframe = pd.concat([padding_df, patient_dataframe], ignore_index=True)
             self.x[idx] = patient_dataframe.to_numpy()
             self.y[idx] = label
 
-        return self.x[idx],self.samples_length[idx], self.y[idx]
+        return self.x[idx], self.y[idx]

@@ -4,9 +4,9 @@ from data_utils import CustomDataset
 
 
 def main():
-    max_seq_length = 336
+    max_seq_length = 336 # This is the maximun seq length from the train and test sets
     train_path = 'data/train'
-    train_ds = CustomDataset(folder_path=train_path, max_seq_length=max_seq_length)
+    train_ds = CustomDataset(folder_path=train_path, seq_length=50)
     for val in tqdm(train_ds):
         print(val[0].shape)
 
