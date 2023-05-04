@@ -16,7 +16,7 @@ def train():
     train_path = 'data/train'
     train_batch_size = 32
     train_shuffle = True
-    train_ds = CustomDataset(folder_path=train_path, seq_length=50)
+    train_ds = CustomDataset(folder_path=train_path, seq_length=100)
 
     train_data_loader = DataLoader(dataset=train_ds,
                                    batch_size=train_batch_size,
@@ -28,7 +28,7 @@ def train():
     test_data_loader = DataLoader(dataset=test_ds,
                                   batch_size=train_batch_size,
                                   shuffle=train_shuffle)
-    num_epochs = 10
+    num_epochs = 25
 
     # # lstm params:
     # input_size = 40
