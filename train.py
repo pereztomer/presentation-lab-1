@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from lstm_model import LSTMClassifier
-from data_utils import CustomDataset
+from data_utils import CustomDataset, plot_graph
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from sklearn.metrics import f1_score as sklearn_f1_score
@@ -12,7 +12,7 @@ from transformer_model import TransformerClassifier
 
 def train():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    max_seq_length = 336  # This is the maximun seq length from the train and test sets
+    max_seq_length = 336  # This is the maximum seq length from the train and test sets
     train_path = 'data/train'
     train_batch_size = 32
     train_shuffle = True
@@ -58,6 +58,14 @@ def train():
     # input_data = torch.randn(32, 100, input_size)  # example input data
     # labels = torch.randint(0, 2, (32, 1)).float()  # example binary labels
 
+    train_loss_list = []
+    test_loss_list = []
+
+    train_f1_list = []
+    test_f1_list = []
+
+    train_accuracy_list = []
+    test_accuracy_list = []
     for epoch in range(num_epochs):
         # Train the model
         model.train()
@@ -99,7 +107,7 @@ def train():
         test_total_actual = []
 
         with torch.no_grad():
-            for test_batch_x, test_batch_labels in tqdm(train_data_loader):
+            for test_batch_x, test_batch_labels in tqdm(test_data_loader):
                 test_batch_x = test_batch_x.to(device)
                 test_batch_labels = test_batch_labels.to(device)
 
@@ -127,6 +135,31 @@ def train():
             f'test loss:{test_loss:.4f} '
             f'test accuracy: {test_accuracy:.4f} '
             f'test f1: {test_f1:.4f} ')
+
+        train_loss_list.append(train_loss)
+        test_loss_list.append(test_loss)
+
+        train_f1_list.append(train_f1)
+        test_f1_list.append(test_f1)
+
+        train_accuracy_list.append(train_accuracy)
+        test_accuracy_list.append(test_accuracy)
+
+    plot_graph(train_loss_list,
+               test_loss_list,
+               'train loss',
+               'test loss',
+               'train/test loss vs epoch')
+    plot_graph(train_f1_list,
+               test_f1_list,
+               'train f1',
+               'test f1',
+               'train/test f1 vs epoch')
+    plot_graph(train_accuracy_list,
+               test_accuracy_list,
+               'train accuracy',
+               'test accuracy',
+               'train/test accuracy vs epoch')
 
 
 if __name__ == '__main__':

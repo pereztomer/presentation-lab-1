@@ -58,3 +58,23 @@ def equalize_ds(folder_path):
             for index in range(1, 14):
                 new_file_name = file_path.replace('.psv', '') + f'_{index}.psv'
                 patient_dataframe.to_csv(new_file_name, sep='|', index=False)
+
+
+def plot_graph(lst_1, lst_2, lst_1_name, lst_2_name, graph_name):
+    import matplotlib.pyplot as plt
+
+    # Create a list of index numbers for the x-axis
+    index = list(range(len(lst_1)))
+
+    # Plot both lists on the same graph
+    plt.plot(index, lst_1, label=lst_1_name)
+    plt.plot(index, lst_2, label=lst_2_name)
+
+    # Add a legend to the graph
+    plt.legend()
+
+    # Add a title to the graph
+    plt.title(graph_name)
+
+    # Show the graph
+    plt.show()
