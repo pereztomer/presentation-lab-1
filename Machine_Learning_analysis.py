@@ -48,18 +48,29 @@ def Over_sample(arr):
     np.random.shuffle(new_arr)
     return (new_arr)
 
+def drop_columns_by_number(arr, columns_to_drop):
+    # Drop the specified columns from the NumPy array
+    arr = np.delete(arr, columns_to_drop, axis=1)
 
 def tree_fitter(x_train, y_train, x_val, y_val):
     print("Xgboost train...")
+    # params = {
+    #     'min_child_weight': [0.5, 1, 5, 10],
+    #     'gamma': [0.1, 0.5, 1, 1.5, 2, 5],
+    #     'subsample': [0.4, 0.6, 0.8, 1.0],
+    #     'reg_alpha': [0, 0.1, 0.2],
+    #     'reg_lambda': [0, 0.1, 0.2, 0.4, 0.8, 1.6, 3.2, 6.4, 12.8, 25.6, 51.2, 102.4, 200],
+    #     'colsample_bytree': [0.6, 0.8, 1.0],
+    #     'max_depth': [3, 4, 5,6]
+    # }
     params = {
-        'min_child_weight': [0.5, 1, 5, 10],
-        'gamma': [0.1, 0.5, 1, 1.5, 2, 5],
-        'subsample': [0.4, 0.6, 0.8, 1.0],
-        'reg_alpha': [0, 0.1, 0.2, 0.4, 0.8, 1.6, 3.2, 6.4,
-                        12.8, 25.6, 51.2, 102.4, 200],
-        'reg_lambda': [0, 0.1, 0.2, 0.4, 0.8, 1.6, 3.2, 6.4, 12.8, 25.6, 51.2, 102.4, 200],
-        'colsample_bytree': [0.6, 0.8, 1.0],
-        'max_depth': [3, 4, 5]
+        'min_child_weight': [1,5],
+        'gamma': [2],
+        'subsample': [0.6,0.8],
+        'reg_alpha': [0.1],
+        'reg_lambda': [0, 0.1],
+        'colsample_bytree': [0.6],
+        'max_depth': [5,6]
     }
 
     xgb = XGBClassifier(learning_rate=0.02, n_estimators=600, objective='binary:logistic',
@@ -69,7 +80,7 @@ def tree_fitter(x_train, y_train, x_val, y_val):
 
     skf = StratifiedKFold(n_splits=folds, shuffle=True, random_state=1001)
 
-    random_search = RandomizedSearchCV(xgb, param_distributions=params, n_iter=param_comb, scoring='roc_auc', n_jobs=4,
+    random_search = RandomizedSearchCV(xgb, param_distributions=params, n_iter=16, scoring='roc_auc', n_jobs=4,
                                        cv=skf.split(x_train, y_train), random_state=1001)
 
     start_time = timer(None)
@@ -79,10 +90,18 @@ def tree_fitter(x_train, y_train, x_val, y_val):
 
     results = pd.DataFrame(random_search.cv_results_)
     results.to_csv('xgb-random-grid-search-results-01.csv', index=False)
+    print(random_search.best_params_)
+
+
+
     predicted_y = random_search.best_estimator_.predict(x_val)
-    print("Tree:")
+
+
+
+    print("XGBOOST :")
     evaluate_pred(pred=predicted_y, y_val=y_val)
     print("...................")
+    # get_feature_importance_order(random_search.best_estimator_)
     return predicted_y
 
 
@@ -107,6 +126,32 @@ def data_imputation(arr):
     arr[nan_mask] = np.take(col_mean, nan_mask.nonzero()[1])
     return arr
 
+def get_feature_importance_order(clf):
+    # Get the feature importance from the XGBoost classifier
+    importance = clf.feature_importances_
+
+    # Create a list of tuples with feature names and importance scores
+    feature_importance = [(f'f{i}', importance_score) for i, importance_score in enumerate(importance)]
+
+    # Sort the feature importance scores in descending order
+    feature_importance_sorted = sorted(feature_importance, key=lambda x: x[1], reverse=True)
+
+    # Get a list of feature names in order of their importance scores
+    feature_names_ordered = [feature[0] for feature in feature_importance_sorted]
+    print (feature_names_ordered)
+    
+
+def create_aggregation_dict(df):
+    agg_dict={}
+    cols= df.columns.tolist()
+    for col in cols:
+        if col =="Age" or col == "Gender":
+            agg_dict[col]= 'median'
+        if col == "SepsisLabel" or col == "ICULOS":
+            agg_dict[col]= lambda x: x.dropna().iloc[-1]
+        else: 
+            agg_dict[col]='mean'
+    return agg_dict
 
 
 def show_Statistics(df):
@@ -126,19 +171,32 @@ def create_ds(source, Get_Y=False,OverSample=False):
     for i, file in enumerate(files):
         df = pd.read_csv(file, sep='|')
         df = crop_if_sick(df, os.path.basename(file))
+                # get the number of rows
+        # df.drop("Calcium").drop()
+        num_rows = df.shape[0]
+        # add a new column with the number of rows
+        df.insert(0, 'num_rows', num_rows)
+        
         last_row = df.fillna(method='ffill').iloc[[-1]]
-        last_row = last_row.reset_index()
-        last_row.insert(0, 'number_of_rows', last_row.pop('index'))
+        # last_row = df.median(skipna=True).to_frame().transpose()
+        # agg_dict = create_aggregation_dict(df)
+        # last_row = df.agg(agg_dict, axis=0, skipna=True).to_frame().transpose()
+        # last_row = last_row.reset_index()
         # print(last_row)
         # df_list.append(last_row)
-        training_ds[i] = np.asarray(last_row)[0]
+        training_ds[i] = np.asarray(last_row)
     # big_table = pd.concat(df_list, axis=0)
-    # show_Statistics(big_table)
+    # delme= [np.argpartition(np.isnan(training_ds).sum(axis=0), -3)[-3:]]# show_Statistics(big_table)
+    
     training_ds= data_imputation(training_ds)
+    
     if OverSample:
       training_ds= Over_sample(training_ds)
     X = training_ds[:, :-1]
     Y = training_ds[:, -1]
+    # X=(X-np.mean(X,axis=0))/(np.std(X,axis=0)**2+0.0001)
+    # X = np.delete(X, delme, axis=1)
+    
     if Get_Y == True:
         return X, Y
     return X
@@ -164,7 +222,7 @@ if __name__ == '__main__':
     X_Test, Y_test = create_ds(
         source="/home/student/HW1/data/test/*", Get_Y=True)
     
-    Random_Forest(x_train=X_train,y_train=Y_train, x_val=X_Test,y_val=Y_test)
+    # Random_Forest(x_train=X_train,y_train=Y_train, x_val=X_Test,y_val=Y_test)
     tree_fitter(x_train=X_train,y_train=Y_train, x_val=X_Test,y_val=Y_test)
     
 
