@@ -3,6 +3,7 @@ import glob
 import numpy as np
 import re
 import pandas as pd
+from xgboost import XGBClassifier
 
 def crop_if_sick(df):
     first_reported_sick_index = df[df.SepsisLabel == 1]
@@ -46,20 +47,40 @@ def create_ds(source):
 
 
 def XGboost_filter(X):
-    pass
+    xgb = XGBClassifier(learning_rate=0.02, n_estimators=600, objective='binary:logistic',
+                    nthread=1)
+    xgb.load_model('model.json')
+    predicted_y = xgb.predict(X)
+    np.savetxt('output2.txt', predicted_y)
+    return predicted_y
+    
 
 
-def main(args=None):
-    #/home/student/HW1/data/train
-    # source_folder = args.input
+
+
+    
+
+def save_predictions_to_csv(ids, predictions, filename):
+    # create a DataFrame with the two lists
+    df = pd.DataFrame({'id': ids, 'prediction': predictions})
+    # save the DataFrame to a CSV file
+    df.to_csv(filename, index=False)
+
+def main(args):
+    #/home/student/HW1/data/test
+    source_folder = args.input
     print("exptracting ds Train...")
     X, patient_list = create_ds(
-        source='home/student/HW1/data/train')
-    XGboost_filter(x_train=X_train,y_train=Y_train, x_val=X_Test,y_val=Y_test)
+        source=source_folder)
+    Y= XGboost_filter(X)
+    save_predictions_to_csv(patient_list,Y,'prediction.csv')
+    
+    
+
 
 
 if __name__ == '__main__':
-    # parser = argparse.ArgumentParser(description='Process some files.')
-    # parser.add_argument('input', help='Input file path')
-    # args = parser.parse_args()
+    parser = argparse.ArgumentParser(description='Process some files.')
+    parser.add_argument('input', help='Input file path')
+    args = parser.parse_args()
     main()
