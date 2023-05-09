@@ -34,6 +34,21 @@ class CustomDataset(Dataset):
             patient_dataframe = patient_dataframe.fillna(0, inplace=False)
             patient_dataframe = patient_dataframe.drop(columns=['SepsisLabel'], inplace=False)
 
+            one_hundred_precent_null = ['Alkalinephos',
+                                        'PaCO2',
+                                        'FiO2',
+                                        'Bilirubin_total',
+                                        'BaseExcess',
+                                        'SaO2',
+                                        'pH',
+                                        'AST',
+                                        'TroponinI',
+                                        'Bilirubin_direct',
+                                        'Fibrinogen',
+                                        'Unit1',
+                                        'Unit2',
+                                        'EtCO2']
+            patient_dataframe = patient_dataframe.drop(columns=one_hundred_precent_null, inplace=False)
             self.samples_length[idx] = patient_dataframe.shape[0]
 
             # padding the df:
