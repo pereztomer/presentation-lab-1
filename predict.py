@@ -69,7 +69,7 @@ def save_predictions_to_csv(ids, predictions, filename):
 def main(args):
     #/home/student/HW1/data/test
     source_folder = args.input
-    print("exptracting ds Train...")
+    print("exptracting ds ...")
     X, patient_list = create_ds(
         source=source_folder)
     Y= XGboost_filter(X)
