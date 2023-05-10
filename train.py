@@ -32,26 +32,26 @@ def train():
     num_epochs = 50
 
     # lstm params:
-    # input_size = 26
-    # hidden_size = 100
-    # num_layers = 2
-    # output_size = 1
-    # model = LSTMClassifier(input_size, hidden_size, num_layers, output_size).to(device)
-
-    # transformer params:
-    input_size = 26
-    hidden_size = 40
+    input_size = 40
+    hidden_size = 100
     num_layers = 2
     output_size = 1
-    num_heads = 4
-    dropout = 0.3
+    model = LSTMClassifier(input_size, hidden_size, num_layers, output_size).to(device)
 
-    model = TransformerClassifier(input_size,
-                                  hidden_size,
-                                  num_layers,
-                                  output_size,
-                                  num_heads,
-                                  dropout).to(device)
+    # # transformer params:
+    # input_size = 26
+    # hidden_size = 40
+    # num_layers = 2
+    # output_size = 1
+    # num_heads = 4
+    # dropout = 0.3
+    #
+    # model = TransformerClassifier(input_size,
+    #                               hidden_size,
+    #                               num_layers,
+    #                               output_size,
+    #                               num_heads,
+    #                               dropout).to(device)
 
     criterion = nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)

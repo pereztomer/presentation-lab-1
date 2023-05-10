@@ -29,35 +29,43 @@ class CustomDataset(Dataset):
                 label_row = patient_dataframe[patient_dataframe.SepsisLabel == 1].index[0]
                 patient_dataframe = patient_dataframe.iloc[:label_row + 1]
 
-            patient_dataframe = patient_dataframe.fillna(patient_dataframe.mean(numeric_only=True).round(1),
-                                                         inplace=False)
-            patient_dataframe = patient_dataframe.fillna(0, inplace=False)
             patient_dataframe = patient_dataframe.drop(columns=['SepsisLabel'], inplace=False)
 
-            one_hundred_precent_null = ['Alkalinephos',
-                                        'PaCO2',
-                                        'FiO2',
-                                        'Bilirubin_total',
-                                        'BaseExcess',
-                                        'SaO2',
-                                        'pH',
-                                        'AST',
-                                        'TroponinI',
-                                        'Bilirubin_direct',
-                                        'Fibrinogen',
-                                        'Unit1',
-                                        'Unit2',
-                                        'EtCO2']
-            patient_dataframe = patient_dataframe.drop(columns=one_hundred_precent_null, inplace=False)
+            # one_hundred_precent_null = ['Alkalinephos',
+            #                             'PaCO2',
+            #                             'FiO2',
+            #                             'Bilirubin_total',
+            #                             'BaseExcess',
+            #                             'SaO2',
+            #                             'pH',
+            #                             'AST',
+            #                             'TroponinI',
+            #                             'Bilirubin_direct',
+            #                             'Fibrinogen',
+            #                             'Unit1',
+            #                             'Unit2',
+            #                             'EtCO2',
+            #                             ]
+            # patient_dataframe = patient_dataframe.drop(columns=one_hundred_precent_null, inplace=False)
             self.samples_length[idx] = patient_dataframe.shape[0]
 
             # padding the df:
             if patient_dataframe.shape[0] >= self.seq_length:
-                patient_dataframe = patient_dataframe.iloc[-self.seq_length:]
+                # max_prev_vals = patient_dataframe.iloc[:-self.seq_length + 1].max().to_frame().T
+                mean_prev_vals = patient_dataframe.iloc[:-self.seq_length + 1].max().to_frame().T
+                patient_dataframe = patient_dataframe.iloc[-self.seq_length + 1:]
+                patient_dataframe = pd.concat([mean_prev_vals, patient_dataframe], ignore_index=True)
+                patient_dataframe = patient_dataframe.fillna(patient_dataframe.mean(numeric_only=True).round(1),
+                                                             inplace=False)
             else:
                 zero_padding = np.zeros((self.seq_length - patient_dataframe.shape[0], patient_dataframe.shape[1]))
                 padding_df = pd.DataFrame(zero_padding, columns=patient_dataframe.columns)
+                patient_dataframe = patient_dataframe.fillna(patient_dataframe.mean(numeric_only=True).round(1),
+                                                             inplace=False)
                 patient_dataframe = pd.concat([padding_df, patient_dataframe], ignore_index=True)
+
+            patient_dataframe = patient_dataframe.fillna(0, inplace=False)
+
             self.x[idx] = patient_dataframe.to_numpy(dtype=np.float32)
             self.y[idx] = np.array(label).astype(np.float32)
 
