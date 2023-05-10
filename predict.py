@@ -83,4 +83,4 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Process some files.')
     parser.add_argument('input', help='Input file path')
     args = parser.parse_args()
-    main()
+    main(args)
