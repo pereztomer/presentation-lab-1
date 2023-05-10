@@ -41,7 +41,7 @@ def create_ds(source):
         
         last_row = df.fillna(method='ffill').iloc[[-1]]
         ds[i] = np.asarray(last_row)
-    ds= data_imputation(ds)
+    #ds= data_imputation(ds)
     return ds,patient_list
 
 
