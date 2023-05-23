@@ -1,4 +1,4 @@
-name: presentation-lab-1
+name: hw1_env
 channels:
   - pytorch
   - nvidia
