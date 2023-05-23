@@ -25,7 +25,7 @@ def data_imputation(arr):
 
 def create_ds(source):
     patient_list = []
-    files = sorted([(int(re.findall(r'\d+', s)[-1]),s) for s in glob.glob('/'+source+'/*')])
+    files = sorted([(int(re.findall(r'\d+', s)[-1]),s) for s in glob.glob(source+'/*')])
     files = [s[1] for s in files]
     getlen = len(pd.read_csv(files[0], sep='|').iloc[0])
     ds = np.zeros(
